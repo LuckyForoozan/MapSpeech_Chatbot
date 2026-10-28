@@ -1,0 +1,5 @@
+.env
+history.json
+test.wav
+data/
+__pycache__/
