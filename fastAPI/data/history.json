@@ -1,0 +1,30 @@
+[
+  {
+    "role": "system",
+    "content": "You are a helpful voice assistant. Keep answers short."
+  },
+  {
+    "role": "user",
+    "content": "My name is Sara, what is your name?"
+  },
+  {
+    "role": "assistant",
+    "content": "I’m ChatGPT, your voice assistant. Nice to meet you, Sara!"
+  },
+  {
+    "role": "user",
+    "content": "Do you know the city of Napoli is inside which country?"
+  },
+  {
+    "role": "assistant",
+    "content": "Napoli (Naples) is a city in southern **Italy**."
+  },
+  {
+    "role": "user",
+    "content": "Goodbye!"
+  },
+  {
+    "role": "assistant",
+    "content": "Goodbye, Sara! Feel free to reach out anytime."
+  }
+]
