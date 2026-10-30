@@ -13,17 +13,26 @@ app = FastAPI()
 HISTORY_FILE = "data/history.json"
 os.makedirs("data", exist_ok=True)
 
+SYSTEM_PROMPT = (
+    "You are a helpful voice assistant. You help people find places and addresses. "
+    "When asked where something is or for the nearest place, use the find_place tool. "
+    "Answer in one or two short spoken sentences, clearly stating the name, how far away it is "
+    "(e.g. '150 meters away' or '1.2 km away'), and the street name. "
+    "Never read raw GPS coordinates aloud."
+)
+
 
 def load_history():
     if os.path.exists(HISTORY_FILE):
-        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return [
-        {
-            "role": "system",
-            "content": "You help people find places and addresses. When asked where something is, use the find_place tool. Answer in one or two short spoken sentences. Never read coordinates aloud.",
-        }
-    ]
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                history = json.load(f)
+                if history and history[0].get("role") == "system":
+                    history[0]["content"] = SYSTEM_PROMPT
+                    return history
+        except Exception:
+            pass
+    return [{"role": "system", "content": SYSTEM_PROMPT}]
 
 
 def save_history(messages):
@@ -36,6 +45,8 @@ messages = load_history()
 
 class Question(BaseModel):
     message: str
+    latitude: float | None = None
+    longitude: float | None = None
 
 
 tools = [
@@ -43,14 +54,25 @@ tools = [
         "type": "function",
         "function": {
             "name": "find_place",
-            "description": "Find places or addresses on a map.",
+            "description": (
+                "Search for places, shops, or addresses. When user coordinates (user_lat, user_lon) "
+                "are provided, results are sorted by physical distance to return the closest ones."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "e.g. 'pharmacy near Via Toledo, Naples'",
-                    }
+                        "description": "Place or business name, e.g. 'pharmacy', 'Sole 365', 'supermarket', 'school', 'train station'",
+                    },
+                    "user_lat": {
+                        "type": "number",
+                        "description": "User's current latitude.",
+                    },
+                    "user_lon": {
+                        "type": "number",
+                        "description": "User's current longitude.",
+                    },
                 },
                 "required": ["query"],
             },
@@ -66,7 +88,13 @@ def root():
 
 @app.post("/chat")
 def chat(q: Question):
-    messages.append({"role": "user", "content": q.message})
+    user_text = q.message
+    if q.latitude is not None and q.longitude is not None:
+        user_content = f"{user_text}\n[My current location coordinates: {q.latitude}, {q.longitude}]"
+    else:
+        user_content = user_text
+
+    messages.append({"role": "user", "content": user_content})
 
     while True:
         response = client.chat.completions.create(
@@ -78,11 +106,9 @@ def chat(q: Question):
         )
         msg = response.choices[0].message
 
-        # If the model didn't request a tool call, we have our final text reply
         if not msg.tool_calls:
             break
 
-        # Record assistant tool request
         messages.append({
             "role": "assistant",
             "content": msg.content or "",
@@ -96,10 +122,17 @@ def chat(q: Question):
             ],
         })
 
-        # Execute the tool (Nominatim lookup) for each call
         for call in msg.tool_calls:
-            args = json.loads(call.function.arguments)
-            places = find_place(args["query"])
+            try:
+                args = json.loads(call.function.arguments)
+            except Exception:
+                args = {}
+
+            lat = args.get("user_lat") if args.get("user_lat") is not None else q.latitude
+            lon = args.get("user_lon") if args.get("user_lon") is not None else q.longitude
+            query = args.get("query", user_text)
+
+            places = find_place(query=query, user_lat=lat, user_lon=lon)
             messages.append({
                 "role": "tool",
                 "tool_call_id": call.id,

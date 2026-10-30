@@ -6,3 +6,4 @@ python-multipart
 streamlit
 requests
 gtts
+streamlit-js-eval
