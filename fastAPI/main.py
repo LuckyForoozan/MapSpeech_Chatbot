@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
 from groq import Groq
-from location_tool import find_place
+from location_tool import find_places
 
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -14,11 +14,11 @@ HISTORY_FILE = "data/history.json"
 os.makedirs("data", exist_ok=True)
 
 SYSTEM_PROMPT = (
-    "You are a helpful voice assistant. You help people find places and addresses. "
-    "When asked where something is or for the nearest place, use the find_place tool. "
-    "Answer in one or two short spoken sentences, clearly stating the name, how far away it is "
-    "(e.g. '150 meters away' or '1.2 km away'), and the street name. "
-    "Never read raw GPS coordinates aloud."
+    "You are a helpful voice assistant. When asked for places in a city (such as pharmacies, restaurants, "
+    "bars, supermarkets, metro stations, or schools), always use the find_places tool. "
+    "Format your final response as a clear, polite numbered list of 5 places. "
+    "For each item, give only the real NAME and the verified ADDRESS from the tool (do NOT include distances). "
+    "Keep it concise, clear, and easy to understand when spoken aloud."
 )
 
 
@@ -45,36 +45,27 @@ messages = load_history()
 
 class Question(BaseModel):
     message: str
-    latitude: float | None = None
-    longitude: float | None = None
 
 
 tools = [
     {
         "type": "function",
         "function": {
-            "name": "find_place",
-            "description": (
-                "Search for places, shops, or addresses. When user coordinates (user_lat, user_lon) "
-                "are provided, results are sorted by physical distance to return the closest ones."
-            ),
+            "name": "find_places",
+            "description": "Find a list of 5 places (pharmacies, bars, restaurants, supermarkets, etc.) in a city using Google Maps.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "query": {
+                    "category": {
                         "type": "string",
-                        "description": "Place or business name, e.g. 'pharmacy', 'Sole 365', 'supermarket', 'school', 'train station'",
+                        "description": "The category or place type, e.g. 'pharmacies', 'bars', 'restaurants', 'supermarkets', 'metro stations'",
                     },
-                    "user_lat": {
-                        "type": "number",
-                        "description": "User's current latitude.",
-                    },
-                    "user_lon": {
-                        "type": "number",
-                        "description": "User's current longitude.",
+                    "city": {
+                        "type": "string",
+                        "description": "The city to search in, e.g. 'Naples', 'Rome', 'Milan', 'Paris'. Default to 'Naples' if none specified.",
                     },
                 },
-                "required": ["query"],
+                "required": ["category"],
             },
         },
     }
@@ -88,13 +79,7 @@ def root():
 
 @app.post("/chat")
 def chat(q: Question):
-    user_text = q.message
-    if q.latitude is not None and q.longitude is not None:
-        user_content = f"{user_text}\n[My current location coordinates: {q.latitude}, {q.longitude}]"
-    else:
-        user_content = user_text
-
-    messages.append({"role": "user", "content": user_content})
+    messages.append({"role": "user", "content": q.message})
 
     while True:
         response = client.chat.completions.create(
@@ -128,11 +113,10 @@ def chat(q: Question):
             except Exception:
                 args = {}
 
-            lat = args.get("user_lat") if args.get("user_lat") is not None else q.latitude
-            lon = args.get("user_lon") if args.get("user_lon") is not None else q.longitude
-            query = args.get("query", user_text)
+            category = args.get("category", q.message)
+            city = args.get("city", "Naples")
 
-            places = find_place(query=query, user_lat=lat, user_lon=lon)
+            places = find_places(category=category, city=city)
             messages.append({
                 "role": "tool",
                 "tool_call_id": call.id,

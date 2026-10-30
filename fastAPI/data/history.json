@@ -1,6 +1,87 @@
 [
   {
     "role": "system",
-    "content": "You are a helpful voice assistant. You help people find places and addresses. When asked where something is or for the nearest place, use the find_place tool. Answer in one or two short spoken sentences, clearly stating the name, how far away it is (e.g. '150 meters away' or '1.2 km away'), and the street name. Never read raw GPS coordinates aloud."
+    "content": "You are a helpful voice assistant. When asked for places in a city (such as pharmacies, restaurants, bars, supermarkets, metro stations, or schools), always use the find_places tool. Format your final response as a clear, polite numbered list of 5 places. For each item, give only the real NAME and the verified ADDRESS from the tool (do NOT include distances). Keep it concise, clear, and easy to understand when spoken aloud."
+  },
+  {
+    "role": "user",
+    "content": "Give me the name of five pharmacies in Napoli, Italy."
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+      {
+        "id": "fc_e35fb95e-8318-4ff0-9e6c-ccfe9e62ada0",
+        "type": "function",
+        "function": {
+          "name": "find_places",
+          "arguments": "{\"category\":\"pharmacies\",\"city\":\"Napoli\"}"
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "tool_call_id": "fc_e35fb95e-8318-4ff0-9e6c-ccfe9e62ada0",
+    "content": "[{\"name\": \"Pharmacy De Tommasis\", \"address\": \"Piazza Francesco Muzii, 24/25/26, 80129 Napoli NA, Italy\"}, {\"name\": \"Antica Farmacia Orlandi\", \"address\": \"Via Bernardo Cavallino, 8/14, 80128 Napoli NA, Italy\"}, {\"name\": \"Farmacia del Vomero\", \"address\": \"Via Maurizio De Vito Piscicelli, 138, 80128 Napoli NA, Italy\"}, {\"name\": \"Farmacia Russo del dott Russo Giovanni sas\", \"address\": \"Via Simone Martini, 80, 80128 Napoli NA, Italy\"}, {\"name\": \"Farmacia Ricciardiello Snc\", \"address\": \"Via Giuseppe Orsi, 99, 80128 Napoli NA, Italy\"}]"
+  },
+  {
+    "role": "assistant",
+    "content": "1. Pharmacy De Tommasis – Piazza Francesco Muzii 24/25/26, 80129 Napoli NA, Italy  \n2. Antica Farmacia Orlandi – Via Bernardo Cavallino 8/14, 80128 Napoli NA, Italy  \n3. Farmacia del Vomero – Via Maurizio De Vito Piscicelli 138, 80128 Napoli NA, Italy  \n4. Farmacia Russo – Via Simone Martini 80, 80128 Napoli NA, Italy  \n5. Farmacia Ricciardiello – Via Giuseppe Orsi 99, 80128 Napoli NA, Italy"
+  },
+  {
+    "role": "user",
+    "content": "Give me the name of five restaurants in Napoli, Italy."
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+      {
+        "id": "fc_4e00094a-0b24-41af-9a57-29ce3180212e",
+        "type": "function",
+        "function": {
+          "name": "find_places",
+          "arguments": "{\"category\":\"restaurants\",\"city\":\"Napoli\"}"
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "tool_call_id": "fc_4e00094a-0b24-41af-9a57-29ce3180212e",
+    "content": "[{\"name\": \"La Locanda Gesù Vecchio\", \"address\": \"Via Giovanni Paladino, 26, 80138 Napoli NA, Italy\"}, {\"name\": \"La Locanda del Monacone. Napoli, Rione Sanità.\", \"address\": \"Via Sanità, 32A, 80137 Napoli NA, Italy\"}, {\"name\": \"Da Maria - Trattoria Napoletana\", \"address\": \"Vico Tiratoio, 7, 80132 Napoli NA, Italy\"}, {\"name\": \"Trattoria canta napoli\", \"address\": \"Vico Mastellone, 13, 80135 Napoli NA, Italy\"}, {\"name\": \"Vasceria Locanda Popolare\", \"address\": \"Via Speranzella, 141, 80134 Napoli NA, Italy\"}]"
+  },
+  {
+    "role": "assistant",
+    "content": "1. La Locanda Gesù Vecchio – Via Giovanni Paladino 26, 80138 Napoli NA, Italy  \n2. La Locanda del Monacone – Via Sanità 32A, 80137 Napoli NA, Italy  \n3. Da Maria – Trattoria Napoletana – Vico Tiratoio 7, 80132 Napoli NA, Italy  \n4. Trattoria Canta Napoli – Vico Mastellone 13, 80135 Napoli NA, Italy  \n5. Vasceria Locanda Popolare – Via Speranzella 141, 80134 Napoli NA, Italy"
+  },
+  {
+    "role": "user",
+    "content": "Give me the name of five parks in Napoli in Italy."
+  },
+  {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+      {
+        "id": "fc_f07b9b1e-4bda-4f0f-a561-d1cf47cbb152",
+        "type": "function",
+        "function": {
+          "name": "find_places",
+          "arguments": "{\"category\":\"parks\",\"city\":\"Napoli\"}"
+        }
+      }
+    ]
+  },
+  {
+    "role": "tool",
+    "tool_call_id": "fc_f07b9b1e-4bda-4f0f-a561-d1cf47cbb152",
+    "content": "[{\"name\": \"Parco Virgiliano\", \"address\": \"Viale Virgilio, 80123 Napoli NA, Italy\"}, {\"name\": \"Bosco di Capodimonte\", \"address\": \"Tondo di Capodimonte, 13, 80100 Napoli NA, Italy\"}, {\"name\": \"Villa Comunale\", \"address\": \"Viale Anton Dohrn, 80122 Napoli NA, Italy\"}, {\"name\": \"Mascagna Park\", \"address\": \"Arenella, 80128 Naples, Metropolitan City of Naples, Italy\"}, {\"name\": \"Parco Vergiliano a Piedigrotta\", \"address\": \"Salita della Grotta, 20, 80122 Napoli NA, Italy\"}]"
+  },
+  {
+    "role": "assistant",
+    "content": "1. Parco Virgiliano – Viale Virgilio, 80123 Napoli NA, Italy  \n2. Bosco di Capodimonte – Tondo di Capodimonte 13, 80100 Napoli NA, Italy  \n3. Villa Comunale – Viale Anton Dohrn, 80122 Napoli NA, Italy  \n4. Mascagna Park – Arenella, 80128 Napoli NA, Italy  \n5. Parco Vergiliano a Piedigrotta – Salita della Grotta 20, 80122 Napoli NA, Italy"
   }
 ]
